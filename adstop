@@ -1,0 +1,68 @@
+#!/usr/bin/env bash
+
+# Blocklist Concatenator
+
+# Check https://firebog.net/ for blocklists
+
+curPath="${0%/*}"
+
+
+# Create array of block lists have format 127.0.0.1 domain.tld
+localList=( 
+    "https://adaway.org/hosts.txt"
+    "https://hosts-file.net/ad_servers.txt"
+    "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"
+)
+
+# Create array of block lists that just contain domain.tld without ip
+domainList=(
+    "https://v.firebog.net/hosts/AdguardDNS.txt"
+    "https://s3.amazonaws.com/lists.disconnect.me/simple_ad.txt"
+    "https://v.firebog.net/hosts/Easylist.txt"
+    "https://www.squidblacklist.org/downloads/dg-ads.acl"
+    "https://v.firebog.net/hosts/Easyprivacy.txt"
+    "https://v.firebog.net/hosts/Prigent-Ads.txt"
+    "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt"
+    "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt"
+    "https://v.firebog.net/hosts/Airelle-trc.txt"
+)
+
+# Create array of block lists that have format 0.0.0.0 domain.tld
+zeroList=(
+    "https://raw.githubusercontent.com/anudeepND/blacklist/master/adservers.txt"
+    "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/UncheckyAds/hosts"
+    "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts"
+    "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt"
+)
+
+
+# Unset hosts block list
+> "/tmp/hosts.blk"
+
+# Go through zeroList array
+for i in "${zeroList[@]}"; do
+    curl -o "/tmp/zeroList.blk" "${i}"
+    cat "/tmp/zeroList.blk" >> "/tmp/hosts.blk"
+done
+
+# Go through localList array
+for i in "${localList[@]}"; do
+    curl -o "/tmp/localList.blk" "${i}"
+    sed -i 's/127.0.0.1/0.0.0.0/g' "/tmp/localList.blk"
+    cat "/tmp/localList.blk" >> "/tmp/hosts.blk"
+done
+
+# Go through domainList
+for i in "${domainList[@]}"; do
+    curl -o "/tmp/domainList.blk" "${i}"
+    grep -vE '^#|^;|^$' "/tmp/domainList.blk" > "/tmp/domainList2.blk"
+    while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
+        printf '0.0.0.0 %s\n' "${line}" >> "/tmp/hosts.blk"
+    done {fd}< "/tmp/domainList2.blk"
+done
+
+grep -vE '^#|^;|^:|^$' "/tmp/hosts.blk" > "/tmp/hosts.tmp"
+sort -o "/tmp/hosts.tmp" "/tmp/hosts.tmp"
+uniq -u "/tmp/hosts.tmp" "/tmp/hosts"
+
+cp "/tmp/hosts" "${curPath}/hosts"

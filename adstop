@@ -25,6 +25,7 @@ domainList=(
     "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/android-tracking.txt"
     "https://raw.githubusercontent.com/Perflyst/PiHoleBlocklist/master/SmartTV.txt"
     "https://v.firebog.net/hosts/Airelle-trc.txt"
+    "https://blocklist.kowabit.de/list.txt"
 )
 
 # Create array of block lists that have format 0.0.0.0 domain.tld
@@ -55,14 +56,13 @@ done
 # Go through domainList
 for i in "${domainList[@]}"; do
     curl -o "/tmp/domainList.blk" "${i}"
-    grep -vE '^#|^;|^$' "/tmp/domainList.blk" > "/tmp/domainList2.blk"
+    grep -vE '^#|^;|^:|^\[|^!|^$' "/tmp/domainList.blk" > "/tmp/domainList2.blk"
     while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
         printf '0.0.0.0 %s\n' "${line}" >> "/tmp/hosts.blk"
     done {fd}< "/tmp/domainList2.blk"
 done
 
-grep -vE '^#|^;|^:|^$' "/tmp/hosts.blk" > "/tmp/hosts.tmp"
+
+grep -vE '^#|^;|^:|^\[|^!|^$' "/tmp/hosts.blk" > "/tmp/hosts.tmp"
 sort -o "/tmp/hosts.tmp" "/tmp/hosts.tmp"
 uniq -u "/tmp/hosts.tmp" "/tmp/hosts"
-
-cp "/tmp/hosts" "${curPath}/hosts"

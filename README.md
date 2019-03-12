@@ -1,6 +1,6 @@
 # adstop
 
-adstop is a small bash script that will fetch several other publicated ad and tracker servers and generate a hosts file containing them for blacklisting. Basically it just creates entries like
+adstop is a small bash script that will fetch several other publicated ad and tracker servers and generate a hosts file containing them for blacklisting. Basically it just creates entries like:
 
 ```
 0.0.0.0 ad.domain.tld

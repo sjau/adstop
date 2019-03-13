@@ -157,7 +157,7 @@ main() {
     declare -A dnsmasq
     getCurPath
     createTmpDir
-#    deleteTmpDir
+    deleteTmpDir
     loadConf
     getSecondaryTLDs
     parseDomainList

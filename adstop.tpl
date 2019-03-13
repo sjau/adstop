@@ -8,7 +8,8 @@
 # The variable ${curPath} contains the current path to the adstop script
 # The variable ${tmpStorage} contains the path to the temporary path and the hosts file would be "${tmpStorage}/hosts"
 finalize() {
-    cp "${tmpStorage}/hosts" "${curPath}/hosts"
+    cp "${tmpStorage}/hosts" "${curPath}/hosts.conf"
+    cp "${tmpStorage}/dnsmasq" "${curPath}/dnsmasq.conf"
 }
 
 
@@ -50,9 +51,19 @@ zeroList=(
 
 
 # Entries here will be added to the top of the generated hosts file
-customTop=""
+hostsTop=""
 
 
 
 # Entries here will be added at the bottom of the generated hosts file
-customBottom=""
+hostsBottom=""
+
+
+
+# Entries here will be added to the top of the generated dnsmasq config file
+dnsmasqTop=""
+
+
+
+# Entries here will be added at the bottom of the generated dnsmasq config file
+dnsmasqBottom=""

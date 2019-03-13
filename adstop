@@ -38,14 +38,29 @@ deleteTmpDir() {
 
 
 
+getSecondaryTLDs() {
+    # Create secondary TLD array
+    declare -A secondary
+    # Get secondary TLDs like co.uk, com.br etc
+    curl -o  "${tmpStorage}/secondary.tld" https://github.com/flowplayer/tld/raw/master/secondary
+    while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
+        secondary[${line}]="${line}"
+    done {fd}< "${tmpStorage}/secondary.tld"
+}
+
+
+
 parseDomainList() {
     # Go through domainList
     for i in "${domainList[@]}"; do
         curl -o "${tmpStorage}/domainList.blk" "${i}"
-        grep -vE '^#|^;|^:|^\[|^!|^$' "${tmpStorage}/domainList.blk" > "${tmpStorage}/domainList2.blk"
         while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
-            printf '0.0.0.0 %s\n' "${line}" >> "${tmpStorage}/hosts.blk"
-        done {fd}< "${tmpStorage}/domainList2.blk"
+            test="${line:0:1}"
+            if [[ "${test}" =~ [a-zA-Z0-9] ]]; then
+                line="${line/$'\r'/}"
+                domains[${line}]="${line}"
+            fi
+        done {fd}< "${tmpStorage}/domainList.blk"
     done
 }
 
@@ -55,8 +70,16 @@ parseLocalList() {
     # Go through localList array
     for i in "${localList[@]}"; do
         curl -o "${tmpStorage}/localList.blk" "${i}"
-        sed -i 's/127.0.0.1/0.0.0.0/g' "${tmpStorage}/localList.blk"
-        cat "${tmpStorage}/localList.blk" >> "${tmpStorage}/hosts.blk"
+        while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
+            test="${line:0:9}"
+            if [[ "${test}" = "127.0.0.1" ]]; then
+                line="${line//$'\t'/ }"
+                line="${line/  / }"
+                line="${line/$'\r'/}"
+                line="${line/127.0.0.1 /}"
+                domains[${line}]="${line}"
+            fi
+        done {fd}< "${tmpStorage}/localList.blk"
     done
 }
 
@@ -66,28 +89,77 @@ parseZeroList() {
     # Go through zeroList array
     for i in "${zeroList[@]}"; do
         curl -o "${tmpStorage}/zeroList.blk" "${i}"
-        cat "${tmpStorage}/zeroList.blk" >> "${tmpStorage}/hosts.blk"
+        while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
+            test="${line:0:7}"
+            if [[ "${test}" = "0.0.0.0" ]]; then
+                line="${line//$'\t'/ }"
+                line="${line/  / }"
+                line="${line/$'\r'/}"
+                line="${line/0.0.0.0 /}"
+                domains[${line}]="${line}"
+            fi
+        done {fd}< "${tmpStorage}/zeroList.blk"
     done
 }
 
 
 
+containsElement () {
+    local e match="$1"
+    shift
+    for e; do
+        [[ "$e" == "$match" ]] && return 0
+    done
+    return 1
+}
+
+
+
 cleanupList() {
-    grep -vE '^#|^;|^:|^\[|^!|^$' "${tmpStorage}/hosts.blk" > "${tmpStorage}/hosts.tmp1"
-    sort -o "${tmpStorage}/hosts.tmp2" "${tmpStorage}/hosts.tmp1"
-    uniq -u "${tmpStorage}/hosts.tmp2" "${tmpStorage}/hosts.tmp3"
-    printf "%s\n" "${customTop}" > "${tmpStorage}/hosts.top"
-    printf "%s\n" "${customBottom}" > "${tmpStorage}/hosts.bottom"
-    cat "${tmpStorage}/hosts.top" "${tmpStorage}/hosts.tmp3" "${tmpStorage}/hosts.bottom" > "${tmpStorage}/hosts"
+    # Create hosts file output
+    for i in "${domains[@]}"; do
+        printf '%s\n' "${i}" >> "${tmpStorage}/hosts.sort"
+    done
+    # Sort hosts file output into hosts file
+    sort -o "${tmpStorage}/hosts" "${tmpStorage}/hosts.sort"
+    # Fill dnsmasq array
+    for i in "${domains[@]}"; do
+        test="${i//[^.]}"
+        c="${#test}"
+        while [[ ${c} -gt 1 ]]; do
+            # Assuming secondary TLDs are never on their own in the list
+            check="${i#*.}"
+            test="${check//[^.]}"
+            c="${#test}"
+            # Check if it's a secondary TLD
+            containsElement "${check}" "${secondary[@]}"
+            if [[ $? -eq 0 ]]; then
+                c=0
+            else
+                i="${check}"
+            fi
+        done
+        dnsmasq[${i}]="${i}" || ( echo "--${i}--" && exit)
+    done
+    # Create dnsmasq file output
+    for i in "${dnsmasq[@]}"; do
+        printf 'address=/%s/0.0.0.0\n' "${i}" >> "${tmpStorage}/dnsmasq.sort"
+    done
+    # Sort hosts file output into hosts file
+    sort -o "${tmpStorage}/dnsmasq" "${tmpStorage}/dnsmasq.sort"
 }
 
 
 
 main() {
+    # Declare an associative array to hold the domains
+    declare -A domains
+    declare -A dnsmasq
     getCurPath
     createTmpDir
-    deleteTmpDir
+#    deleteTmpDir
     loadConf
+    getSecondaryTLDs
     parseDomainList
     parseLocalList
     parseZeroList

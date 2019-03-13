@@ -20,3 +20,5 @@ Then you can modify the blocklists in the `adstop.conf` file by either adding mo
 You can also give custom entries that should appear at the top or bottom of your hosts files
 
 And with the `finalize` function at the top of the `adblock.tpl` file you can even say what commands should be run after it generated the hosts file in a temporary directory.
+
+In addition it will also create a `dnsmasq.conf` file in case you use dnsmasq as server. There's also options to add entries before and after the generated bloclklist, the same as with the hosts list.

@@ -50,6 +50,8 @@ zeroList=(
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/StevenBlack/hosts"
     "https://someonewhocares.org/hosts/zero/"
     "http://winhelp2002.mvps.org/hosts.txt"
+    "https://github.com/AdroitAdorKhan/Energized/blob/master/core/hosts"
+    "https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt"
 )
 
 

@@ -19,6 +19,7 @@ localList=(
     "https://adaway.org/hosts.txt"
     "https://hosts-file.net/ad_servers.txt"
     "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"
+    "http://www.malwaredomainlist.com/hostslist/hosts.txt"
 )
 
 
@@ -46,6 +47,9 @@ zeroList=(
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/UncheckyAds/hosts"
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts"
     "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt"
+    "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/StevenBlack/hosts"
+    "https://someonewhocares.org/hosts/zero/"
+    "http://winhelp2002.mvps.org/hosts.txt"
 )
 
 

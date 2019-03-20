@@ -73,3 +73,12 @@ dnsmasqTop=""
 
 # Entries here will be added at the bottom of the generated dnsmasq config file
 dnsmasqBottom=""
+
+
+
+# Array elements here will not be shortened to the domain name. This can be useful that
+# you might want to block the pixel tracking of facebook "pixe.facebook.com" but not "facebook.com" in general
+dnsmasqIgnore=(
+    "google"
+    "facebook"
+)

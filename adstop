@@ -39,10 +39,8 @@ deleteTmpDir() {
 
 
 getSecondaryTLDs() {
-    # Create secondary TLD array
-    declare -A secondary
     # Get secondary TLDs like co.uk, com.br etc
-    curl -o  "${tmpStorage}/secondary.tld" https://github.com/flowplayer/tld/raw/master/secondary
+    curl -o  "${tmpStorage}/secondary.tld" https://raw.githubusercontent.com/flowplayer/tld/master/secondary
     while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
         secondary[${line}]="${line}"
     done {fd}< "${tmpStorage}/secondary.tld"
@@ -58,7 +56,7 @@ parseDomainList() {
             test="${line:0:1}"
             if [[ "${test}" =~ [a-zA-Z0-9] ]]; then
                 line="${line/$'\r'/}"
-                line="${line%% #*}"
+                line="${line%% *}"
                 domains[${line}]="${line}"
             fi
         done {fd}< "${tmpStorage}/domainList.blk"
@@ -78,7 +76,7 @@ parseLocalList() {
                 line="${line/  / }"
                 line="${line/$'\r'/}"
                 line="${line/127.0.0.1 /}"
-                line="${line%% #*}"
+                line="${line%% *}"
                 domains[${line}]="${line}"
             fi
         done {fd}< "${tmpStorage}/localList.blk"
@@ -98,7 +96,7 @@ parseZeroList() {
                 line="${line/  / }"
                 line="${line/$'\r'/}"
                 line="${line/0.0.0.0 /}"
-                line="${line%% #*}"
+                line="${line%% *}"
                 domains[${line}]="${line}"
             fi
         done {fd}< "${tmpStorage}/zeroList.blk"
@@ -121,7 +119,7 @@ containsElement () {
 cleanupList() {
     # Create hosts file output
     for i in "${domains[@]}"; do
-        printf '%s\n' "${i}" >> "${tmpStorage}/hosts.sort"
+        printf '0.0.0.0     %s\n' "${i}" >> "${tmpStorage}/hosts.sort"
     done
     # Sort hosts file output into hosts file
     sort -o "${tmpStorage}/hosts" "${tmpStorage}/hosts.sort"
@@ -129,22 +127,42 @@ cleanupList() {
     for i in "${domains[@]}"; do
         test="${i//[^.]}"
         c="${#test}"
-        while [[ ${c} -gt 1 ]]; do
-            # Assuming secondary TLDs are never on their own in the list
-            check="${i#*.}"
-            test="${check//[^.]}"
-            c="${#test}"
-            # Check if it's a secondary TLD
-            containsElement "${check}" "${secondary[@]}"
-            if [[ $? -eq 0 ]]; then
-                c=0
-            else
-                i="${check}"
+        skip="n"
+        for j in "${dnsmasqIgnore[@]}"; do
+            if [[ "${i}" == *"${j}"* ]]; then
+                skip="y"
             fi
         done
-        dnsmasq[${i}]="${i}" || ( echo "--${i}--" && exit)
+        if [[ "${skip}" == "n" ]]; then
+            while [[ ${c} -gt 1 ]]; do
+                # Assuming secondary TLDs are never on their own in the list
+                check="${i#*.}"
+                test="${check//[^.]}"
+                c="${#test}"
+                # Check if it's a secondary TLD
+                if containsElement "${check}" "${secondary[@]}" ; then
+                    c=0
+                else
+                    i="${check}"
+                fi
+            done
+        fi
+        dnsmasqIDN[${i}]="${i}"
     done
     # Create dnsmasq file output
+    for i in "${dnsmasqIDN[@]}"; do
+        printf 'address=/%s/0.0.0.0\n' "${i}" >> "${tmpStorage}/dnsmasqIDN.sort"
+    done
+    # Sort hosts file output into hosts file
+    sort -o "${tmpStorage}/dnsmasqIDN" "${tmpStorage}/dnsmasqIDN.sort"
+    # Create non-IDN array
+    LC_ALL=C
+    for i in "${dnsmasqIDN[@]}"; do
+        if ! [[ "${i}" =~ [^a-zA-Z0-9.\-] ]]; then
+            dnsmasq[${i}]="${i}" || ( echo "--${i}--" && exit)
+        fi
+    done
+    LC_ALL=
     for i in "${dnsmasq[@]}"; do
         printf 'address=/%s/0.0.0.0\n' "${i}" >> "${tmpStorage}/dnsmasq.sort"
     done
@@ -155,9 +173,11 @@ cleanupList() {
 
 
 main() {
-    # Declare an associative array to hold the domains
+    # Declare some associative arrays to hold data
     declare -A domains
     declare -A dnsmasq
+    declare -A dnsmasqIDN
+    declare -A secondary
     getCurPath
     createTmpDir
     deleteTmpDir

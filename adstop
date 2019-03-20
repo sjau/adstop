@@ -58,6 +58,7 @@ parseDomainList() {
             test="${line:0:1}"
             if [[ "${test}" =~ [a-zA-Z0-9] ]]; then
                 line="${line/$'\r'/}"
+                line="${line%% #*}"
                 domains[${line}]="${line}"
             fi
         done {fd}< "${tmpStorage}/domainList.blk"
@@ -77,6 +78,7 @@ parseLocalList() {
                 line="${line/  / }"
                 line="${line/$'\r'/}"
                 line="${line/127.0.0.1 /}"
+                line="${line%% #*}"
                 domains[${line}]="${line}"
             fi
         done {fd}< "${tmpStorage}/localList.blk"
@@ -96,6 +98,7 @@ parseZeroList() {
                 line="${line/  / }"
                 line="${line/$'\r'/}"
                 line="${line/0.0.0.0 /}"
+                line="${line%% #*}"
                 domains[${line}]="${line}"
             fi
         done {fd}< "${tmpStorage}/zeroList.blk"

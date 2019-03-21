@@ -7,9 +7,11 @@
 # Finalize - this command will be run at the very end of the script. Use it to move/copy the generated hosts somewhere or do other magic
 # The variable ${curPath} contains the current path to the adstop script
 # The variable ${tmpStorage} contains the path to the temporary path and the hosts file would be "${tmpStorage}/hosts"
+# There's two configs for dnsmasq. One containint IDNs and the other one doesn't. They're at "${tmpStorage}/dnsmasq" and "${tmpStorage}/dnsmasqIDN"
 finalize() {
     cp "${tmpStorage}/hosts" "${curPath}/hosts.conf"
     cp "${tmpStorage}/dnsmasq" "${curPath}/dnsmasq.conf"
+    cp "${tmpStorage}/dnsmasqIDN" "${curPath}/dnsmasqIDN.conf"
 }
 
 
@@ -19,7 +21,6 @@ localList=(
     "https://adaway.org/hosts.txt"
     "https://hosts-file.net/ad_servers.txt"
     "http://pgl.yoyo.org/adservers/serverlist.php?hostformat=hosts&showintro=0&mimetype=plaintext"
-    "http://www.malwaredomainlist.com/hostslist/hosts.txt"
 )
 
 
@@ -47,11 +48,6 @@ zeroList=(
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/UncheckyAds/hosts"
     "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/add.2o7Net/hosts"
     "https://raw.githubusercontent.com/crazy-max/WindowsSpyBlocker/master/data/hosts/spy.txt"
-    "https://raw.githubusercontent.com/StevenBlack/hosts/master/data/StevenBlack/hosts"
-    "https://someonewhocares.org/hosts/zero/"
-    "http://winhelp2002.mvps.org/hosts.txt"
-    "https://github.com/AdroitAdorKhan/Energized/blob/master/core/hosts"
-    "https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt"
 )
 
 
@@ -77,7 +73,8 @@ dnsmasqBottom=""
 
 
 # Array elements here will not be shortened to the domain name. This can be useful that
-# you might want to block the pixel tracking of facebook "pixe.facebook.com" but not "facebook.com" in general
+# you might want to block the pixel tracking of facebook "pixel.facebook.com" but not "facebook.com" in general
+# Notice: In addition the top 500 domains ( https://moz.com/top500/domains/csv ) will also be extempted by default
 dnsmasqIgnore=(
     "google"
     "facebook"

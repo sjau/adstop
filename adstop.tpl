@@ -81,4 +81,5 @@ dnsmasqBottom=""
 dnsmasqIgnore=(
     "google"
     "facebook"
+    "github"
 )

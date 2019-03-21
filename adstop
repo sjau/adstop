@@ -105,6 +105,18 @@ parseZeroList() {
 
 
 
+parseTop500() {
+    curl -o "${tmpStorage}/top500.csv" "https://moz.com/top500/domains/csv"
+    tail -n +2 "${tmpStorage}/top500.csv" > "${tmpStorage}/top500.txt"
+    while IFS=',' read -r -u "${fd}" rank domain other; do
+        domain="${domain//\"/}"
+        domain="${domain//\//}"
+        dnsmasqIgnore+=("${domain}")
+    done  {fd}<"${tmpStorage}/top500.txt"
+}
+
+
+
 containsElement () {
     local e match="$1"
     shift
@@ -186,6 +198,7 @@ main() {
     parseDomainList
     parseLocalList
     parseZeroList
+    parseTop500
     cleanupList
     finalize
 }

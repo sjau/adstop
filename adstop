@@ -42,7 +42,9 @@ getSecondaryTLDs() {
     # Get secondary TLDs like co.uk, com.br etc
     curl -o  "${tmpStorage}/secondary.tld" https://raw.githubusercontent.com/flowplayer/tld/master/secondary
     while IFS="" read -r -u "${fd}" line || [ -n "${line}" ]; do
-        secondary[${line}]="${line}"
+        # Necessary to only match co.uk as .co.uk
+        sec=".${line}"
+        secondary[${sec}]="${sec}"
     done {fd}< "${tmpStorage}/secondary.tld"
 }
 

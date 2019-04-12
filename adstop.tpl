@@ -79,4 +79,5 @@ dnsmasqIgnore=(
     "google"
     "facebook"
     "github"
+    "thetvdb"
 )

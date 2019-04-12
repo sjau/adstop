@@ -137,6 +137,10 @@ cleanupList() {
     done
     # Sort hosts file output into hosts file
     sort -o "${tmpStorage}/hosts" "${tmpStorage}/hosts.sort"
+    # Remove ignored entries
+    for i in "${hostsIgnore[@]}"; do
+        sed -i "/$i/d" "${tmpStorage}/hosts"
+    done
     # Fill dnsmasq array
     for i in "${domains[@]}"; do
         test="${i//[^.]}"
@@ -182,6 +186,10 @@ cleanupList() {
     done
     # Sort hosts file output into hosts file
     sort -o "${tmpStorage}/dnsmasq" "${tmpStorage}/dnsmasq.sort"
+    # Remove ignored entries
+    for i in "${dnsmasqIgnore[@]}"; do
+        sed -i "/$i/d" "${tmpStorage}/dnsmasq"
+    done
 }
 
 

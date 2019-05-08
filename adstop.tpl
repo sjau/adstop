@@ -57,6 +57,7 @@ zeroList=(
     "http://winhelp2002.mvps.org/hosts.txt"
     "https://github.com/AdroitAdorKhan/Energized/blob/master/core/hosts"
     "https://raw.githubusercontent.com/jerryn70/GoodbyeAds/master/Hosts/GoodbyeAds.txt"
+    "https://raw.githubusercontent.com/sjau/adstop/master/adstop_bl.txt"
 )
 
 

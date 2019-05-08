@@ -1,0 +1,2 @@
+# Custom blocklist for adstop
+0.0.0.0 magento-analytics.com   # https://arstechnica.com/information-technology/2019/05/more-than-100-commerce-sites-infected-with-code-that-steals-payment-card-data/

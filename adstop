@@ -108,24 +108,28 @@ parseZeroList() {
 
 
 parseTop500() {
-    curl -o "${tmpStorage}/top500.csv" "https://moz.com/top500/domains/csv"
+    curl -Lo "${tmpStorage}/top500.csv" "https://moz.com/top-500/download/?table=top500Domains"
     tail -n +2 "${tmpStorage}/top500.csv" > "${tmpStorage}/top500.txt"
     while IFS=',' read -r -u "${fd}" rank domain other; do
         domain="${domain//\"/}"
         domain="${domain//\//}"
-        dnsmasqIgnore+=("${domain}")
+        case $domain in
+            "doubleclick.net")
+                # do nothing
+                ;;
+            *)
+                dnsmasqIgnore+=(".${domain}")
+                ;;
+        esac
     done  {fd}<"${tmpStorage}/top500.txt"
 }
 
 
 
-containsElement () {
-    local e match="$1"
-    shift
-    for e; do
-        [[ "$e" == "$match" ]] && return 0
-    done
-    return 1
+containsElement() {
+    local needle="${1}"
+    local -n haystack="${2}"
+    [[ -n "${haystack[$needle]}" ]] && return 0 || return 1
 }
 
 
@@ -148,6 +152,7 @@ cleanupList() {
         skip="n"
         for j in "${dnsmasqIgnore[@]}"; do
             if [[ "${i}" == *"${j}"* ]]; then
+                echo "$i vs. $j"
                 skip="y"
             fi
         done
@@ -158,14 +163,17 @@ cleanupList() {
                 test="${check//[^.]}"
                 c="${#test}"
                 # Check if it's a secondary TLD
-                if containsElement "${check}" "${secondary[@]}" ; then
+                if containsElement ".${check}" secondary; then
                     c=0
                 else
                     i="${check}"
                 fi
             done
         fi
-        dnsmasqIDN[${i}]="${i}"
+        # Build dnsmasqIDN array
+        if [[ "${i}" != "0.0" ]]; then
+            dnsmasqIDN[${i}]="${i}"
+        fi
     done
     # Create dnsmasq file output
     for i in "${dnsmasqIDN[@]}"; do
@@ -208,9 +216,10 @@ main() {
     parseDomainList
     parseLocalList
     parseZeroList
-    parseTop500
+#    parseTop500
     cleanupList
     finalize
 }
 
 main
+
